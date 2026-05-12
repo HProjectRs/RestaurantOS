@@ -1,0 +1,17 @@
+{
+  "name": "restaurantos",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A full-featured bilingual restaurant & café management system",
+  "scripts": {
+    "dev": "concurrently -n server,client -c blue,green \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "build": "npm run build --prefix server && npm run build --prefix client",
+    "lint": "npm run lint --prefix client",
+    "typecheck": "npm run typecheck --prefix server && npm run typecheck --prefix client",
+    "test": "npm run test --prefix server",
+    "setup": "cd server && npm install && npx prisma generate && npx prisma db push && npx tsx prisma/seed.ts && cd ../client && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
