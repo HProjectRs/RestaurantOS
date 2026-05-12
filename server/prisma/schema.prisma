@@ -1,0 +1,325 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Business {
+  id                String   @id @default(uuid())
+  name              String
+  nameAr            String?
+  logo              String?
+  taxRate           Float    @default(15.0)
+  serviceChargeRate Float    @default(10.0)
+  currency          String   @default("SAR")
+  wifiDuration      Int      @default(120)
+  wifiVoucherEnabled Boolean @default(true)
+  autoPrintOrders   Boolean  @default(false)
+  kitchenDisplayEnabled Boolean @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  users             User[]
+  menuCategories    MenuCategory[]
+  tables            Table[]
+  shifts            Shift[]
+  wifiQrCodes       WifiQrCode[]
+}
+
+model User {
+  id          String   @id @default(uuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id])
+  name        String
+  email       String   @unique
+  phone       String?
+  password    String
+  role        String   @default("ADMIN") // ADMIN, MANAGER, CASHIER, WAITER, CHEF
+  pin         String?
+  isActive    Boolean  @default(true)
+  shiftId     String?
+  shift       Shift?       @relation(fields: [shiftId], references: [id])
+  salary      Float        @default(0)
+  salaryPeriod String      @default("MONTHLY") // MONTHLY, BIWEEKLY, WEEKLY, DAILY
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  orders      Order[]      @relation("CashierOrders")
+  attendance  Attendance[]
+}
+
+model MenuCategory {
+  id         String     @id @default(uuid())
+  businessId String
+  business   Business   @relation(fields: [businessId], references: [id])
+  name       String
+  nameAr     String?
+  description String?
+  sortOrder  Int        @default(0)
+  isActive   Boolean    @default(true)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  items      MenuItem[]
+}
+
+model MenuItem {
+  id            String          @id @default(uuid())
+  categoryId    String
+  category      MenuCategory    @relation(fields: [categoryId], references: [id])
+  name          String
+  nameAr        String?
+  description   String?
+  descriptionAr String?
+  price         Float
+  discountPrice Float?
+  image         String?
+  barcode       String?
+  isAvailable   Boolean         @default(true)
+  isActive      Boolean         @default(true)
+  prepTime      Int             @default(10)
+  sortOrder     Int             @default(0)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  modifiers     MenuModifier[]
+  orderItems    OrderItem[]
+}
+
+model MenuModifier {
+  id        String           @id @default(uuid())
+  menuItemId String
+  menuItem  MenuItem         @relation(fields: [menuItemId], references: [id])
+  name      String
+  nameAr    String?
+  type      String           @default("SINGLE") // SINGLE, MULTIPLE
+  required  Boolean          @default(false)
+  min       Int              @default(0)
+  max       Int              @default(1)
+  options   ModifierOption[]
+}
+
+model ModifierOption {
+  id         String       @id @default(uuid())
+  modifierId String
+  modifier   MenuModifier @relation(fields: [modifierId], references: [id])
+  name       String
+  nameAr     String?
+  price      Float        @default(0)
+  sortOrder  Int          @default(0)
+}
+
+model Table {
+  id        String       @id @default(uuid())
+  businessId String
+  business  Business     @relation(fields: [businessId], references: [id])
+  number    String
+  capacity  Int          @default(4)
+  status    String       @default("AVAILABLE") // AVAILABLE, OCCUPIED, RESERVED, MAINTENANCE
+  qrCode    String?
+  isActive  Boolean      @default(true)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  orders    Order[]
+  reservations Reservation[]
+}
+
+model Order {
+  id            String      @id @default(uuid())
+  businessId    String
+  orderNumber   Int
+  tableId       String?
+  table         Table?      @relation(fields: [tableId], references: [id])
+  cashierId     String?
+  cashier       User?       @relation("CashierOrders", fields: [cashierId], references: [id])
+  customerName  String?
+  customerPhone String?
+  customerEmail String?
+  type          String      @default("DINE_IN") // DINE_IN, TAKEAWAY, DELIVERY, ONLINE
+  status        String      @default("PENDING") // PENDING, CONFIRMED, PREPARING, READY, DELIVERED, CANCELLED
+  paymentStatus String      @default("UNPAID") // UNPAID, PAID, REFUNDED, PARTIAL
+  paymentMethod String?     // CASH, CARD, WALLET, BANK_TRANSFER
+  subtotal      Float       @default(0)
+  tax           Float       @default(0)
+  serviceCharge Float       @default(0)
+  discount      Float       @default(0)
+  total         Float       @default(0)
+  notes         String?
+  isOnlineOrder Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  items         OrderItem[]
+}
+
+model OrderItem {
+  id                String   @id @default(uuid())
+  orderId           String
+  order             Order    @relation(fields: [orderId], references: [id])
+  menuItemId        String
+  menuItem          MenuItem @relation(fields: [menuItemId], references: [id])
+  quantity          Int      @default(1)
+  price             Float
+  notes             String?
+  selectedModifiers Json?    // JSON of selected modifiers
+  status            String   @default("PENDING") // PENDING, PREPARING, READY, DELIVERED
+  sortOrder         Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model WifiQrCode {
+  id          String        @id @default(uuid())
+  businessId  String
+  business    Business      @relation(fields: [businessId], references: [id])
+  code        String        @unique
+  label       String?
+  durationMinutes Int       @default(120)
+  maxSessions Int           @default(50)
+  isActive    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  sessions    WifiSession[]
+}
+
+model WifiSession {
+  id              String     @id @default(uuid())
+  wifiQrCodeId    String
+  wifiQrCode      WifiQrCode @relation(fields: [wifiQrCodeId], references: [id])
+  macAddress      String?
+  ipAddress       String?
+  phoneNumber     String?
+  durationMinutes Int        @default(120)
+  status          String     @default("ACTIVE") // ACTIVE, EXPIRED, DISCONNECTED
+  startTime       DateTime   @default(now())
+  endTime         DateTime
+  createdAt       DateTime   @default(now())
+}
+
+model Shift {
+  id        String   @id @default(uuid())
+  businessId String
+  business  Business @relation(fields: [businessId], references: [id])
+  name      String
+  nameAr    String?
+  startTime String
+  endTime   String
+  days      Int      @default(127) // bitmask: Mon=1, Tue=2, Wed=4, Thu=8, Fri=16, Sat=32, Sun=64
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  users     User[]
+}
+
+model Attendance {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  businessId  String
+  date        String   // YYYY-MM-DD
+  clockIn     DateTime
+  clockOut    DateTime?
+  createdAt   DateTime @default(now())
+}
+
+model Expense {
+  id          String   @id @default(uuid())
+  businessId  String
+  description String
+  amount      Float
+  category    String   @default("أخرى")
+  date        DateTime @default(now())
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Reservation {
+  id           String   @id @default(uuid())
+  businessId   String
+  tableId      String?
+  table        Table?   @relation(fields: [tableId], references: [id])
+  customerName String
+  customerPhone String
+  guests       Int
+  dateTime     DateTime
+  status       String   @default("PENDING") // PENDING, CONFIRMED, SEATED, CANCELLED, NO_SHOW
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model License {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  businessId  String   @unique
+  plan        String   @default("STANDARD") // STANDARD, PROFESSIONAL, ENTERPRISE
+  maxUsers    Int      @default(10)
+  maxBranches Int      @default(1)
+  validFrom   DateTime @default(now())
+  validUntil  DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model BackupLog {
+  id          String   @id @default(uuid())
+  businessId  String?
+  fileName    String
+  fileSize    Int
+  status      String   @default("SUCCESS") // SUCCESS, FAILED
+  notes       String?
+  createdAt   DateTime @default(now())
+}
+
+model LoyaltyProgram {
+  id                String   @id @default(uuid())
+  businessId        String
+  name              String   @default("برنامج الولاء")
+  pointsPerDinar    Float    @default(1.0) // points earned per 1 DZD spent
+  dinarPerPoint     Float    @default(10.0) // DZD value per point for redemption
+  minPointsRedeem   Int      @default(100)
+  enabled           Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  customers         LoyaltyCustomer[]
+}
+
+model LoyaltyCustomer {
+  id              String         @id @default(uuid())
+  businessId      String
+  programId       String
+  program         LoyaltyProgram @relation(fields: [programId], references: [id])
+  phone           String
+  name            String?
+  totalPoints     Int            @default(0)
+  totalSpent      Float          @default(0)
+  visitCount      Int            @default(0)
+  lastVisit       DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  transactions    LoyaltyTransaction[]
+}
+
+model LoyaltyTransaction {
+  id              String         @id @default(uuid())
+  customerId      String
+  customer        LoyaltyCustomer @relation(fields: [customerId], references: [id])
+  type            String         // EARN, REDEEM
+  points          Int
+  referenceType   String?        // ORDER, MANUAL
+  referenceId     String?        // order ID if from order
+  description     String?
+  createdAt       DateTime       @default(now())
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  businessId  String?
+  userId      String?
+  action      String   // CREATE, UPDATE, DELETE, LOGIN, LOGOUT, PAYMENT
+  entity      String   // ORDER, MENU_ITEM, USER, SETTINGS, etc.
+  entityId    String?
+  details     String?  // JSON string with extra info
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+}

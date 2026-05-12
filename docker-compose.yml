@@ -1,0 +1,91 @@
+version: '3.8'
+
+networks:
+  restaurantos-net:
+    driver: bridge
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: restaurantos
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - restaurantos-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://postgres:${DB_PASSWORD:-postgres}@postgres:5432/restaurantos?schema=public
+      JWT_SECRET: ${JWT_SECRET}
+      REFRESH_SECRET: ${REFRESH_SECRET}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      NODE_ENV: production
+      PORT: 3001
+      BACKUP_DIR: /app/backups
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      - server_uploads:/app/uploads
+      - server_backups:/app/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - restaurantos-net
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: /api
+      VITE_SOCKET_URL: http://server:3001
+    depends_on:
+      - server
+    restart: unless-stopped
+    networks:
+      - restaurantos-net
+
+  # Optional: Caddy reverse proxy with auto SSL
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - client
+      - server
+    restart: unless-stopped
+    networks:
+      - restaurantos-net
+    profiles:
+      - production
+
+volumes:
+  postgres_data:
+  server_uploads:
+  server_backups:
+  caddy_data:
+  caddy_config:
