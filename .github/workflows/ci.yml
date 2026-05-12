@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  typecheck:
+    name: TypeScript Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install server dependencies
+        run: npm install
+        working-directory: server
+
+      - name: Install client dependencies
+        run: npm install
+        working-directory: client
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+        working-directory: server
+
+      - name: TypeScript check (server)
+        run: npx tsc --noEmit
+        working-directory: server
+
+      - name: TypeScript check (client)
+        run: npx tsc --noEmit
+        working-directory: client
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install client dependencies
+        run: npm install
+        working-directory: client
+
+      - name: ESLint
+        run: npx eslint . --ext ts,tsx
+        working-directory: client
