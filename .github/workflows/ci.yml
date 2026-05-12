@@ -118,7 +118,7 @@ jobs:
           JWT_EXPIRES_IN: 15m
           NODE_ENV: test
       - name: Upload server coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v6
         with:
           directory: server/coverage
           flags: server
@@ -144,7 +144,7 @@ jobs:
         env:
           VITE_SENTRY_DSN: ''
       - name: Upload client coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v6
         with:
           directory: client/coverage
           flags: client
