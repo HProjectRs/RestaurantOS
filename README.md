@@ -2,7 +2,23 @@
 
 > A full-featured restaurant and café management system with bilingual (AR/EN) interface, built for production deployment.
 
+<div align="center">
+  <br />
+  <img src="https://via.placeholder.com/800x400/1e293b/ffffff?text=RestaurantOS+Screenshot" alt="RestaurantOS Screenshot" width="800" />
+  <br />
+  <sub><i>Screenshot coming soon — add your own by placing an image in the repo and updating this path.</i></sub>
+  <br /><br />
+</div>
+
+[![CI](https://github.com/HProjectRs/RestaurantOS/actions/workflows/ci.yml/badge.svg)](https://github.com/HProjectRs/RestaurantOS/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-18-61dafb)](https://react.dev/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
 ---
+
+## Features
 
 ## Features
 
