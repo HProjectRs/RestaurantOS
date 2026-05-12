@@ -2,6 +2,11 @@ import { Response, NextFunction } from 'express'
 import { PrismaClient } from '@prisma/client'
 import { AuthRequest } from '../types'
 
+/**
+ * Middleware factory that logs user actions to the audit log.
+ * Intercepts res.json to capture the response body and record
+ * the action, entity, entityId, and request details in the database.
+ */
 export function logAction(action: string, entity: string) {
   return async (req: AuthRequest, res: Response, next: NextFunction) => {
     const originalJson = res.json.bind(res)

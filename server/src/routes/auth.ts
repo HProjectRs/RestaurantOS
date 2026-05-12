@@ -6,6 +6,15 @@ import { AuthRequest } from '../types'
 
 const router = Router()
 
+/**
+ * POST /api/auth/login
+ * Authenticate user with email/password or PIN.
+ * Returns JWT access token and refresh token on success.
+ * @body {email?: string, password?: string, pin?: string}
+ * @returns {accessToken, refreshToken, user, business}
+ * @throws 400 if email or PIN missing
+ * @throws 401 if credentials invalid
+ */
 router.post('/login', async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -61,6 +70,13 @@ router.post('/login', async (req: AuthRequest, res: Response) => {
   }
 })
 
+/**
+ * POST /api/auth/register
+ * Register a new business with an admin user account.
+ * @body {name, email, password, phone, businessName?}
+ * @returns 201 {token, user, business}
+ * @throws 400 if email already in use
+ */
 router.post('/register', async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -107,6 +123,14 @@ router.post('/register', async (req: AuthRequest, res: Response) => {
   }
 })
 
+/**
+ * POST /api/auth/refresh
+ * Exchange a refresh token for a new access token and refresh token pair.
+ * @body {refreshToken: string}
+ * @returns {accessToken, refreshToken}
+ * @throws 400 if refresh token missing
+ * @throws 401 if refresh token invalid or user inactive
+ */
 router.post('/refresh', async (req: AuthRequest, res: Response) => {
   try {
     const { refreshToken } = req.body
@@ -139,6 +163,13 @@ router.post('/refresh', async (req: AuthRequest, res: Response) => {
   }
 })
 
+/**
+ * GET /api/auth/me
+ * Get the currently authenticated user's profile.
+ * @headers Authorization: Bearer <token>
+ * @returns {id, name, email, phone, role, businessId, isActive}
+ * @throws 404 if user not found
+ */
 router.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -153,6 +184,12 @@ router.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
   }
 })
 
+/**
+ * PUT /api/auth/profile
+ * Update the authenticated user's name and phone.
+ * @body {name?: string, phone?: string}
+ * @returns {id, name, email, phone}
+ */
 router.put('/profile', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -167,6 +204,14 @@ router.put('/profile', authenticate, async (req: AuthRequest, res: Response) => 
   }
 })
 
+/**
+ * PUT /api/auth/change-password
+ * Change the authenticated user's password.
+ * @body {currentPassword: string, newPassword: string}
+ * @returns {message: string}
+ * @throws 400 if current password is incorrect
+ * @throws 404 if user not found
+ */
 router.put('/change-password', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')

@@ -4,6 +4,8 @@ import helmet from 'helmet'
 import hpp from 'hpp'
 import compression from 'compression'
 import dotenv from 'dotenv'
+import swaggerUi from 'swagger-ui-express'
+import { swaggerSpec } from './swagger'
 import path from 'path'
 import { createServer } from 'http'
 import { Server as SocketIOServer } from 'socket.io'
@@ -26,8 +28,11 @@ import paymentRoutes from './routes/payments'
 import loyaltyRoutes from './routes/loyalty'
 import { apiLimiter, authLimiter } from './middleware/rateLimiter'
 import { sanitizeInput } from './middleware/sanitize'
+import { initSentry, setupSentryErrorHandler } from './sentry'
+import { validateEnv } from './check-env'
 
 dotenv.config()
+validateEnv()
 
 const app = express()
 const httpServer = createServer(app)
@@ -75,6 +80,9 @@ app.use(cors({
 // Remove Express fingerprint
 app.disable('x-powered-by')
 
+// Initialize Sentry error monitoring
+initSentry(app)
+
 // Body parsing
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
@@ -114,14 +122,34 @@ app.use('/api/invoices', invoiceRoutes)
 app.use('/api/payments', paymentRoutes)
 app.use('/api/loyalty', loyaltyRoutes)
 
+// Swagger documentation
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'RestaurantOS API Docs',
+}))
+app.get('/api/docs.json', (_req, res) => {
+  res.setHeader('Content-Type', 'application/json')
+  res.send(swaggerSpec)
+})
+
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() })
 })
+
+// Sentry test endpoint (development only)
+if (!isProduction) {
+  app.get('/api/sentry-test', () => {
+    throw new Error('Sentry test error — this is intentional')
+  })
+}
 
 // 404 handler
 app.use('/api/*', (_req, res) => {
   res.status(404).json({ error: 'Route not found' })
 })
+
+// Sentry error handler (must be before generic error handler)
+setupSentryErrorHandler(app)
 
 // Secure error handler (no stack traces in production)
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

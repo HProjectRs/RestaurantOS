@@ -7,7 +7,12 @@ import { AuthRequest } from '../types'
 
 const router = Router()
 
-// Generate WiFi QR codes
+/**
+ * POST /api/wifi/qr-codes
+ * Generate a new WiFi QR code for guest internet access.
+ * @body {label?, durationMinutes?, maxSessions?}
+ * @returns 201 {wifiQrCode, qrImage, qrUrl}
+ */
 router.post('/qr-codes', authenticate, requireRole('ADMIN', 'MANAGER'), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -36,7 +41,11 @@ router.post('/qr-codes', authenticate, requireRole('ADMIN', 'MANAGER'), async (r
   }
 })
 
-// Get all WiFi QR codes
+/**
+ * GET /api/wifi/qr-codes
+ * Get all WiFi QR codes for the current business with session counts.
+ * @returns {Array<WifiQrCode & {_count: {sessions: number}}>}
+ */
 router.get('/qr-codes', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -51,7 +60,15 @@ router.get('/qr-codes', authenticate, async (req: AuthRequest, res: Response) =>
   }
 })
 
-// Public: Customer scans QR and enters phone to get WiFi
+/**
+ * POST /api/wifi/connect
+ * Public endpoint for customers to connect to WiFi via QR code.
+ * Creates a WiFi session with duration limit.
+ * @body {code: string, phoneNumber?, macAddress?}
+ * @returns {success, session, wifi}
+ * @throws 404 if QR code invalid or inactive
+ * @throws 429 if max sessions reached
+ */
 router.post('/connect', async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -113,7 +130,12 @@ router.post('/connect', async (req: AuthRequest, res: Response) => {
   }
 })
 
-// Public: Get WiFi QR info
+/**
+ * GET /api/wifi/info/:code
+ * Public endpoint to get WiFi QR code info (duration, business name).
+ * @returns {id, durationMinutes, business}
+ * @throws 404 if QR code not found
+ */
 router.get('/info/:code', async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -132,7 +154,11 @@ router.get('/info/:code', async (req: AuthRequest, res: Response) => {
   }
 })
 
-// Admin: Get WiFi sessions
+/**
+ * GET /api/wifi/sessions
+ * Get WiFi sessions for the current business (last 100).
+ * @returns {Array<WifiSession & {wifiQrCode: {label, code}}>}
+ */
 router.get('/sessions', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -148,7 +174,11 @@ router.get('/sessions', authenticate, async (req: AuthRequest, res: Response) =>
   }
 })
 
-// Admin: Disconnect a WiFi session
+/**
+ * PATCH /api/wifi/sessions/:id/disconnect
+ * Forcefully disconnect an active WiFi session.
+ * @returns {WifiSession} with status set to DISCONNECTED
+ */
 router.patch('/sessions/:id/disconnect', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -162,7 +192,12 @@ router.patch('/sessions/:id/disconnect', authenticate, async (req: AuthRequest, 
   }
 })
 
-// Admin: Toggle QR code active status
+/**
+ * PATCH /api/wifi/qr-codes/:id/toggle
+ * Toggle a WiFi QR code's active status.
+ * @returns {WifiQrCode} with updated isActive flag
+ * @throws 404 if QR code not found
+ */
 router.patch('/qr-codes/:id/toggle', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')

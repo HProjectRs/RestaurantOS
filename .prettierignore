@@ -1,0 +1,9 @@
+node_modules
+dist
+build
+.next
+coverage
+*.min.js
+prisma/migrations
+server/coverage
+client/dist

@@ -23,6 +23,10 @@ function sanitizeObject(obj: Record<string, any>): Record<string, any> {
   return sanitized
 }
 
+/**
+ * Middleware that sanitizes req.body, req.query, and req.params
+ * against XSS by escaping HTML special characters.
+ */
 export function sanitizeInput(req: AuthRequest, _res: Response, next: NextFunction) {
   if (req.body && typeof req.body === 'object' && !Buffer.isBuffer(req.body)) {
     req.body = sanitizeObject(req.body)
@@ -36,6 +40,10 @@ export function sanitizeInput(req: AuthRequest, _res: Response, next: NextFuncti
   next()
 }
 
+/**
+ * Sanitize a string by escaping HTML special characters (&, <, >, ", ').
+ * Returns the sanitized string safe for insertion into HTML.
+ */
 export function sanitizeHtml(dirty: string): string {
   return dirty
     .replace(/&/g, '&amp;')

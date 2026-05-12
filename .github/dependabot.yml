@@ -1,23 +1,75 @@
 version: 2
 updates:
   - package-ecosystem: "npm"
-    directory: "/server"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
-
-  - package-ecosystem: "npm"
     directory: "/client"
     schedule:
       interval: "weekly"
+      day: "monday"
     open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "automated"
+    reviewers:
+      - "restaurantos/security-team"
+    commit-message:
+      prefix: "chore(deps):"
+    groups:
+      patches:
+        update-types:
+          - "patch"
+    ignore:
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
 
-  - package-ecosystem: "docker"
-    directory: "/"
+  - package-ecosystem: "npm"
+    directory: "/server"
     schedule:
       interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "automated"
+    reviewers:
+      - "restaurantos/security-team"
+    commit-message:
+      prefix: "chore(deps):"
+    groups:
+      patches:
+        update-types:
+          - "patch"
+    ignore:
+      - dependency-name: "prisma"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@prisma/client"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "automated"
+    reviewers:
+      - "restaurantos/security-team"
+    commit-message:
+      prefix: "chore(deps):"
+
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "automated"
+    reviewers:
+      - "restaurantos/security-team"
+    commit-message:
+      prefix: "chore(deps):"

@@ -33,7 +33,13 @@ const upload = multer({
 
 const router = Router()
 
-// Get all categories with items (public - for customer view)
+/**
+ * GET /api/menu/categories
+ * Get all active categories with their menu items (public).
+ * @query {businessId: string}
+ * @returns {MenuCategory[]}
+ * @throws 400 if businessId missing
+ */
 router.get('/categories', async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -61,7 +67,12 @@ router.get('/categories', async (req: AuthRequest, res: Response) => {
   }
 })
 
-// CRUD Categories (admin)
+/**
+ * POST /api/menu/categories
+ * Create a new menu category.
+ * @body {name, nameAr, description?, sortOrder?}
+ * @returns 201 {MenuCategory}
+ */
 router.post('/categories', authenticate, requireRole('ADMIN', 'MANAGER'), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -75,6 +86,12 @@ router.post('/categories', authenticate, requireRole('ADMIN', 'MANAGER'), async 
   }
 })
 
+/**
+ * PUT /api/menu/categories/:id
+ * Update a menu category by ID.
+ * @body {name?, nameAr?, description?, sortOrder?}
+ * @returns {MenuCategory}
+ */
 router.put('/categories/:id', authenticate, requireRole('ADMIN', 'MANAGER'), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -88,6 +105,11 @@ router.put('/categories/:id', authenticate, requireRole('ADMIN', 'MANAGER'), asy
   }
 })
 
+/**
+ * DELETE /api/menu/categories/:id
+ * Delete a menu category by ID.
+ * @returns {message: string}
+ */
 router.delete('/categories/:id', authenticate, requireRole('ADMIN', 'MANAGER'), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -98,7 +120,12 @@ router.delete('/categories/:id', authenticate, requireRole('ADMIN', 'MANAGER'), 
   }
 })
 
-// CRUD Menu Items
+/**
+ * POST /api/menu/items
+ * Create a new menu item.
+ * @body {name, nameAr, description?, descriptionAr?, price, categoryId, ...}
+ * @returns 201 {MenuItem}
+ */
 router.post('/items', authenticate, requireRole('ADMIN', 'MANAGER'), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -111,6 +138,12 @@ router.post('/items', authenticate, requireRole('ADMIN', 'MANAGER'), async (req:
   }
 })
 
+/**
+ * PUT /api/menu/items/:id
+ * Update a menu item by ID.
+ * @body {name?, nameAr?, price?, categoryId?, ...}
+ * @returns {MenuItem}
+ */
 router.put('/items/:id', authenticate, requireRole('ADMIN', 'MANAGER'), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -124,6 +157,11 @@ router.put('/items/:id', authenticate, requireRole('ADMIN', 'MANAGER'), async (r
   }
 })
 
+/**
+ * DELETE /api/menu/items/:id
+ * Delete a menu item by ID.
+ * @returns {message: string}
+ */
 router.delete('/items/:id', authenticate, requireRole('ADMIN', 'MANAGER'), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -134,6 +172,11 @@ router.delete('/items/:id', authenticate, requireRole('ADMIN', 'MANAGER'), async
   }
 })
 
+/**
+ * PATCH /api/menu/items/:id/toggle
+ * Toggle the availability of a menu item.
+ * @returns {MenuItem} with updated isAvailable flag
+ */
 router.patch('/items/:id/toggle', authenticate, requireRole('ADMIN', 'MANAGER'), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -149,7 +192,13 @@ router.patch('/items/:id/toggle', authenticate, requireRole('ADMIN', 'MANAGER'),
   }
 })
 
-// Image upload
+/**
+ * POST /api/menu/items/:id/image
+ * Upload a menu item image (max 5MB, jpg/jpeg/png/webp/gif).
+ * @multipart {image: File}
+ * @returns {MenuItem} with updated image URL
+ * @throws 400 if no file or invalid file type
+ */
 router.post('/items/:id/image', authenticate, requireRole('ADMIN', 'MANAGER'), (req: AuthRequest, res: Response) => {
   upload.single('image')(req, res, async (err: any) => {
     if (err) {
@@ -174,7 +223,12 @@ router.post('/items/:id/image', authenticate, requireRole('ADMIN', 'MANAGER'), (
   })
 })
 
-// Modifiers
+/**
+ * POST /api/menu/items/:id/modifiers
+ * Add a modifier group to a menu item.
+ * @body {name, nameAr, type, required, min, max, options}
+ * @returns 201 {MenuModifier}
+ */
 router.post('/items/:id/modifiers', authenticate, requireRole('ADMIN', 'MANAGER'), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -188,6 +242,12 @@ router.post('/items/:id/modifiers', authenticate, requireRole('ADMIN', 'MANAGER'
   }
 })
 
+/**
+ * PUT /api/menu/modifiers/:id
+ * Update a modifier group.
+ * @body {name?, nameAr?, type?, required?, min?, max?}
+ * @returns {MenuModifier}
+ */
 router.put('/modifiers/:id', authenticate, requireRole('ADMIN', 'MANAGER'), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -202,6 +262,11 @@ router.put('/modifiers/:id', authenticate, requireRole('ADMIN', 'MANAGER'), asyn
   }
 })
 
+/**
+ * DELETE /api/menu/modifiers/:id
+ * Delete a modifier group.
+ * @returns {message: string}
+ */
 router.delete('/modifiers/:id', authenticate, requireRole('ADMIN', 'MANAGER'), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')

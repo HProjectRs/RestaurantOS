@@ -5,6 +5,11 @@ import { AuthRequest } from '../types'
 
 const router = Router()
 
+/**
+ * GET /api/reports/dashboard
+ * Get dashboard summary with today's stats (orders, revenue, pending, tables, items).
+ * @returns {todayOrders, todayRevenue, pendingOrders, activeTables, totalItems, totalCategories, recentOrders, topSellingItems}
+ */
 router.get('/dashboard', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -89,6 +94,12 @@ router.get('/dashboard', authenticate, async (req: AuthRequest, res: Response) =
   }
 })
 
+/**
+ * GET /api/reports/sales
+ * Get sales data grouped by day, week, or month for a date range.
+ * @query {from?: string, to?: string, groupBy?: 'day'|'week'|'month'}
+ * @returns {Array<{date, count, total}>}
+ */
 router.get('/sales', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -140,6 +151,12 @@ router.get('/sales', authenticate, async (req: AuthRequest, res: Response) => {
   }
 })
 
+/**
+ * GET /api/reports/categories
+ * Get category-level sales report with total sold and revenue.
+ * @query {from?: string, to?: string}
+ * @returns {Array<{id, name, nameAr, totalSold, revenue}>}
+ */
 router.get('/categories', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -189,6 +206,12 @@ router.get('/categories', authenticate, async (req: AuthRequest, res: Response) 
   }
 })
 
+/**
+ * GET /api/reports/employees
+ * Get employee performance report with order count and total sales.
+ * @query {from?: string, to?: string}
+ * @returns {Array<{id, name, role, orderCount, totalSales}>}
+ */
 router.get('/employees', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -225,7 +248,12 @@ router.get('/employees', authenticate, async (req: AuthRequest, res: Response) =
   }
 })
 
-// Advanced: Item performance with time analysis
+/**
+ * GET /api/reports/items-performance
+ * Get item-level performance with quantity, revenue, and hourly distribution.
+ * @query {from?: string, to?: string}
+ * @returns {Array<{id, name, nameAr, quantity, revenue, orders, hourly, avgPerOrder}>}
+ */
 router.get('/items-performance', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -283,7 +311,12 @@ router.get('/items-performance', authenticate, async (req: AuthRequest, res: Res
   }
 })
 
-// Advanced: Peak hours analysis
+/**
+ * GET /api/reports/peak-hours
+ * Get hourly and day-of-week order distribution for peak time analysis.
+ * @query {from?: string, to?: string}
+ * @returns {hourly: Array<{hour, count, revenue}>, dow: Array<{day, count, revenue}>}
+ */
 router.get('/peak-hours', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -330,7 +363,12 @@ router.get('/peak-hours', authenticate, async (req: AuthRequest, res: Response) 
   }
 })
 
-// Advanced: Payment method breakdown
+/**
+ * GET /api/reports/payment-methods
+ * Get payment method breakdown with count and revenue.
+ * @query {from?: string, to?: string}
+ * @returns {Record<string, {count, revenue}>}
+ */
 router.get('/payment-methods', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')

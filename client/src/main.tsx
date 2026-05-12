@@ -7,6 +7,11 @@ import { CartProvider } from './store/CartContext'
 import App from './App'
 import './index.css'
 import './i18n'
+import * as Sentry from '@sentry/react'
+import { initSentry } from './sentry'
+import ErrorFallback from './components/ErrorFallback'
+
+initSentry()
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,11 +25,12 @@ const queryClient = new QueryClient({
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <CartProvider>
-          <App />
-        </CartProvider>
+    <Sentry.ErrorBoundary fallback={ErrorFallback} onReset={() => window.location.reload()}>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <CartProvider>
+            <App />
+          </CartProvider>
         <Toaster
           position="top-center"
           toastOptions={{
@@ -41,5 +47,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         />
       </BrowserRouter>
     </QueryClientProvider>
+    </Sentry.ErrorBoundary>
   </React.StrictMode>
 )

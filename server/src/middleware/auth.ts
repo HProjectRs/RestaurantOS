@@ -14,6 +14,11 @@ if (!REFRESH_SECRET) {
   process.exit(1)
 }
 
+/**
+ * Verify JWT access token from Authorization header.
+ * Attaches decoded user payload to `req.user` on success.
+ * Returns 401 with error message on failure.
+ */
 export const authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization
   if (!authHeader?.startsWith('Bearer ')) {
@@ -33,6 +38,11 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
   }
 }
 
+/**
+ * Middleware factory that restricts access to specified roles.
+ * Must be used after `authenticate` middleware.
+ * Returns 403 if user role is not in the allowed list.
+ */
 export const requireRole = (...roles: string[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
@@ -45,15 +55,26 @@ export const requireRole = (...roles: string[]) => {
   }
 }
 
+/**
+ * Generate a JWT access token for the given payload.
+ * Token expiry is controlled by JWT_EXPIRES_IN env var (default: 1d).
+ */
 export const generateToken = (payload: AuthPayload): string => {
   const expiresIn = process.env.JWT_EXPIRES_IN || '1d'
   return jwt.sign(payload, JWT_SECRET, { expiresIn } as jwt.SignOptions)
 }
 
+/**
+ * Generate a JWT refresh token (7-day expiry) for the given payload.
+ */
 export const generateRefreshToken = (payload: AuthPayload): string => {
   return jwt.sign(payload, REFRESH_SECRET, { expiresIn: '7d' })
 }
 
+/**
+ * Verify and decode a refresh token string.
+ * Throws if the token is invalid or expired.
+ */
 export const verifyRefreshToken = (token: string): AuthPayload => {
   return jwt.verify(token, REFRESH_SECRET) as AuthPayload
 }

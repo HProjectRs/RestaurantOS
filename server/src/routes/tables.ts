@@ -6,6 +6,11 @@ import { AuthRequest } from '../types'
 
 const router = Router()
 
+/**
+ * GET /api/tables
+ * Get all active tables for the current business, ordered by number.
+ * @returns {Table[]}
+ */
 router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -19,6 +24,12 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
   }
 })
 
+/**
+ * POST /api/tables
+ * Create a new table and generate its QR code for self-ordering.
+ * @body {number: string, capacity: number}
+ * @returns 201 {Table} with QR code
+ */
 router.post('/', authenticate, requireRole('ADMIN', 'MANAGER'), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -44,6 +55,12 @@ router.post('/', authenticate, requireRole('ADMIN', 'MANAGER'), async (req: Auth
   }
 })
 
+/**
+ * PUT /api/tables/:id
+ * Update a table's properties.
+ * @body {number?, capacity?, status?}
+ * @returns {Table}
+ */
 router.put('/:id', authenticate, requireRole('ADMIN', 'MANAGER'), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -57,6 +74,11 @@ router.put('/:id', authenticate, requireRole('ADMIN', 'MANAGER'), async (req: Au
   }
 })
 
+/**
+ * DELETE /api/tables/:id
+ * Soft-delete a table (sets isActive to false).
+ * @returns {message: string}
+ */
 router.delete('/:id', authenticate, requireRole('ADMIN', 'MANAGER'), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -70,6 +92,12 @@ router.delete('/:id', authenticate, requireRole('ADMIN', 'MANAGER'), async (req:
   }
 })
 
+/**
+ * PATCH /api/tables/:id/status
+ * Update a table's status (AVAILABLE, OCCUPIED, RESERVED, MAINTENANCE).
+ * @body {status: TableStatus}
+ * @returns {Table}
+ */
 router.patch('/:id/status', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -84,6 +112,12 @@ router.patch('/:id/status', authenticate, async (req: AuthRequest, res: Response
   }
 })
 
+/**
+ * POST /api/tables/:id/regenerate-qr
+ * Regenerate the QR code for a table.
+ * @returns {Table} with updated QR code
+ * @throws 404 if table not found
+ */
 router.post('/:id/regenerate-qr', authenticate, requireRole('ADMIN', 'MANAGER'), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')

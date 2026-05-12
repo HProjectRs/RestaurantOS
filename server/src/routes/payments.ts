@@ -12,7 +12,14 @@ function getStripe() {
   return new Stripe(key)
 }
 
-// Create payment intent for an order
+/**
+ * POST /api/payments/create-intent
+ * Create a Stripe payment intent for an order.
+ * @body {orderId: string}
+ * @returns {clientSecret: string}
+ * @throws 400 if Stripe not configured or order already paid
+ * @throws 404 if order not found
+ */
 router.post('/create-intent', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -41,7 +48,14 @@ router.post('/create-intent', authenticate, async (req: AuthRequest, res: Respon
   }
 })
 
-// Stripe webhook (no auth - uses Stripe signature)
+/**
+ * POST /api/payments/webhook
+ * Stripe webhook endpoint for payment events (no auth - uses Stripe signature).
+ * Handles payment_intent.succeeded to update order payment status.
+ * @headers stripe-signature: string
+ * @returns {received: true}
+ * @throws 400 if signature verification fails
+ */
 router.post('/webhook', async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -82,7 +96,11 @@ router.post('/webhook', async (req: AuthRequest, res: Response) => {
   }
 })
 
-// Get Stripe publishable key
+/**
+ * GET /api/payments/config
+ * Get the Stripe publishable key for client-side initialization.
+ * @returns {publishableKey: string}
+ */
 router.get('/config', async (req: AuthRequest, res: Response) => {
   res.json({
     publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || '',

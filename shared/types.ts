@@ -1,11 +1,16 @@
 // Shared types between client and server
 
+/** Role assigned to system users for access control */
 export type UserRole = 'ADMIN' | 'MANAGER' | 'CASHIER' | 'WAITER' | 'CHEF'
 
+/** Possible states of an order throughout its lifecycle */
 export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'READY' | 'DELIVERED' | 'CANCELLED'
+/** Payment status tracking for orders */
 export type PaymentStatus = 'UNPAID' | 'PAID' | 'REFUNDED' | 'PARTIAL'
+/** Accepted payment methods in the system */
 export type PaymentMethod = 'CASH' | 'CARD' | 'WALLET' | 'BANK_TRANSFER'
 
+/** Menu item with bilingual (Arabic/English) support */
 export interface MenuItem {
   id: string
   name: string
@@ -24,6 +29,7 @@ export interface MenuItem {
   modifiers?: MenuModifier[]
 }
 
+/** Menu category for grouping related items */
 export interface MenuCategory {
   id: string
   name: string
@@ -34,6 +40,7 @@ export interface MenuCategory {
   items?: MenuItem[]
 }
 
+/** Modifier group for menu items (e.g. size, extras) */
 export interface MenuModifier {
   id: string
   name: string
@@ -45,6 +52,7 @@ export interface MenuModifier {
   options: ModifierOption[]
 }
 
+/** Individual option within a modifier group */
 export interface ModifierOption {
   id: string
   name: string
@@ -52,6 +60,7 @@ export interface ModifierOption {
   price: number
 }
 
+/** Individual item entry within an order */
 export interface OrderItem {
   id: string
   orderId: string
@@ -64,6 +73,7 @@ export interface OrderItem {
   status: OrderStatus
 }
 
+/** Complete order with items, pricing, and payment details */
 export interface Order {
   id: string
   orderNumber: number
@@ -85,6 +95,7 @@ export interface Order {
   updatedAt: string
 }
 
+/** Guest WiFi session for internet access */
 export interface WifiSession {
   id: string
   qrCodeId: string
@@ -97,6 +108,7 @@ export interface WifiSession {
   endTime: string
 }
 
+/** Restaurant table with QR code for self-ordering */
 export interface Table {
   id: string
   number: string
@@ -105,6 +117,7 @@ export interface Table {
   qrCode: string
 }
 
+/** Staff member with role and shift assignment */
 export interface Employee {
   id: string
   name: string
@@ -116,6 +129,7 @@ export interface Employee {
   shiftId: string | null
 }
 
+/** Work shift definition with time range and active days */
 export interface Shift {
   id: string
   name: string
@@ -124,6 +138,7 @@ export interface Shift {
   days: number[]
 }
 
+/** Table reservation made by a customer */
 export interface Reservation {
   id: string
   customerName: string
@@ -135,6 +150,7 @@ export interface Reservation {
   notes: string | null
 }
 
+/** Business-level configuration settings */
 export interface BusinessSettings {
   id: string
   name: string

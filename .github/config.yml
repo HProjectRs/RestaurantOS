@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: RestaurantOS Documentation
+    url: https://github.com/HProjectRs/RestaurantOS#readme
+    about: Check the README for setup and usage instructions
+  - name: GitHub Discussions
+    url: https://github.com/HProjectRs/RestaurantOS/discussions
+    about: Ask questions or discuss features with the community

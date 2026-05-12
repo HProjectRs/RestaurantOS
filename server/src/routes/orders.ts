@@ -10,7 +10,14 @@ function generateOrderNumber(): number {
   return parseInt(Date.now().toString().slice(-6)) + Math.floor(Math.random() * 100)
 }
 
-// Create order (public for online, auth for staff)
+/**
+ * POST /api/orders
+ * Create a new order (public for online ordering, authenticated for staff).
+ * Emits socket event 'order:new' to business room.
+ * @body {items, tableId?, customerName?, customerPhone?, type?, notes?, businessId?}
+ * @returns 201 {Order}
+ * @throws 400 if item not available or businessId missing
+ */
 router.post('/', async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -88,7 +95,12 @@ router.post('/', async (req: AuthRequest, res: Response) => {
   }
 })
 
-// Get orders (with filters)
+/**
+ * GET /api/orders
+ * Get orders with optional filters (status, type, date range).
+ * @query {status?, type?, dateFrom?, dateTo?, limit?}
+ * @returns {Order[]}
+ */
 router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -122,7 +134,12 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
   }
 })
 
-// Get single order
+/**
+ * GET /api/orders/:id
+ * Get a single order by ID.
+ * @returns {Order}
+ * @throws 404 if order not found
+ */
 router.get('/:id', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -141,7 +158,13 @@ router.get('/:id', authenticate, async (req: AuthRequest, res: Response) => {
   }
 })
 
-// Update order status
+/**
+ * PATCH /api/orders/:id/status
+ * Update order status. Frees the table when delivered if no active orders remain.
+ * Emits socket event 'order:statusUpdate'.
+ * @body {status: OrderStatus}
+ * @returns {Order}
+ */
 router.patch('/:id/status', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -178,7 +201,13 @@ router.patch('/:id/status', authenticate, async (req: AuthRequest, res: Response
   }
 })
 
-// Update item status within order (for kitchen)
+/**
+ * PATCH /api/orders/:orderId/items/:itemId/status
+ * Update status of an individual item within an order (used by kitchen display).
+ * Emits socket event 'order:itemStatusUpdate'.
+ * @body {status: OrderStatus}
+ * @returns {OrderItem}
+ */
 router.patch('/:orderId/items/:itemId/status', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -213,7 +242,14 @@ router.patch('/:orderId/items/:itemId/status', authenticate, async (req: AuthReq
   }
 })
 
-// Update payment
+/**
+ * PATCH /api/orders/:id/payment
+ * Update payment status and method for an order.
+ * Frees the table when paid if no active orders remain.
+ * Emits socket event 'order:paymentUpdate'.
+ * @body {paymentStatus: PaymentStatus, paymentMethod?: PaymentMethod}
+ * @returns {Order}
+ */
 router.patch('/:id/payment', authenticate, requireRole('ADMIN', 'MANAGER', 'CASHIER'), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -249,7 +285,12 @@ router.patch('/:id/payment', authenticate, requireRole('ADMIN', 'MANAGER', 'CASH
   }
 })
 
-// Cancel order
+/**
+ * PATCH /api/orders/:id/cancel
+ * Cancel an order and free its table.
+ * Emits socket event 'order:cancelled'.
+ * @returns {Order}
+ */
 router.patch('/:id/cancel', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -275,7 +316,14 @@ router.patch('/:id/cancel', authenticate, async (req: AuthRequest, res: Response
   }
 })
 
-// Public: Lookup order by order number (for customer tracking)
+/**
+ * GET /api/orders/track/:orderNumber
+ * Public endpoint to look up an order by its order number.
+ * @query {businessId: string}
+ * @returns {Order}
+ * @throws 400 if invalid order number
+ * @throws 404 if order not found
+ */
 router.get('/track/:orderNumber', async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -300,7 +348,13 @@ router.get('/track/:orderNumber', async (req: AuthRequest, res: Response) => {
   }
 })
 
-// Public: Call waiter from table
+/**
+ * POST /api/orders/call-waiter
+ * Public endpoint for customers to call a waiter from their table.
+ * Emits socket event 'waiter:called'.
+ * @body {tableId?, businessId, message?}
+ * @returns {success, callData}
+ */
 router.post('/call-waiter', async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -324,7 +378,13 @@ router.post('/call-waiter', async (req: AuthRequest, res: Response) => {
   }
 })
 
-// Get active (non-delivered/non-cancelled) order for a table
+/**
+ * GET /api/orders/active
+ * Get the active (non-delivered/non-cancelled) order for a table.
+ * @query {tableId: string, businessId: string}
+ * @returns {Order | null}
+ * @throws 400 if tableId or businessId missing
+ */
 router.get('/active', async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -354,7 +414,15 @@ router.get('/active', async (req: AuthRequest, res: Response) => {
   }
 })
 
-// Add items to existing order (for "order more" / continue ordering)
+/**
+ * POST /api/orders/:id/items
+ * Add items to an existing order (continue ordering).
+ * Emits socket events 'order:statusUpdate' and 'kitchen:itemsAdded'.
+ * @body {items: Array<{menuItemId, quantity, notes?, selectedModifiers?}>}
+ * @returns {Order} updated order
+ * @throws 400 if order is delivered/cancelled or item unavailable
+ * @throws 404 if order not found
+ */
 router.post('/:id/items', async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -434,7 +502,12 @@ router.post('/:id/items', async (req: AuthRequest, res: Response) => {
   }
 })
 
-// Print receipt for an order
+/**
+ * GET /api/orders/:id/receipt
+ * Generate receipt data for an order (for thermal printer).
+ * @returns {receiptData} formatted receipt object
+ * @throws 404 if order not found
+ */
 router.get('/:id/receipt', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -462,7 +535,14 @@ router.get('/:id/receipt', authenticate, async (req: AuthRequest, res: Response)
   }
 })
 
-// Split bill: split an order's items into multiple orders
+/**
+ * POST /api/orders/:id/split
+ * Split an order's items into multiple new orders.
+ * @body {splits: Array<{items: string[]}>}
+ * @returns {original: Order, splits: Order[]}
+ * @throws 400 if order is already paid
+ * @throws 404 if original order not found
+ */
 router.post('/:id/split', authenticate, requireRole('ADMIN', 'MANAGER', 'CASHIER'), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -566,7 +646,12 @@ router.post('/:id/split', authenticate, requireRole('ADMIN', 'MANAGER', 'CASHIER
   }
 })
 
-// Public: Get recent orders by phone (for customer history)
+/**
+ * GET /api/orders/customer/:phone
+ * Public endpoint to get recent orders by customer phone number.
+ * @query {businessId: string}
+ * @returns {Order[]} last 10 orders
+ */
 router.get('/customer/:phone', async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')

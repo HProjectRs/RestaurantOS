@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
@@ -62,6 +63,24 @@ export default defineConfig({
           ui: ['lucide-react', 'react-hot-toast'],
         },
       },
+    },
+  },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./src/tests/setup.ts'],
+    css: false,
+    exclude: ['e2e/**', 'node_modules/**'],
+    coverage: {
+      provider: 'v8',
+      thresholds: {
+        statements: 60,
+        branches: 60,
+        functions: 60,
+        lines: 60,
+      },
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/tests/**', 'src/main.tsx', 'src/vite-env.d.ts'],
     },
   },
 })

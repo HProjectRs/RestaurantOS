@@ -2,16 +2,65 @@
   "name": "restaurantos",
   "version": "1.0.0",
   "private": true,
-  "description": "A full-featured bilingual restaurant & café management system",
+  "description": "A full-featured bilingual (AR/EN) restaurant & café management system",
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=9.0.0"
+  },
   "scripts": {
     "dev": "concurrently -n server,client -c blue,green \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "dev:client": "npm run dev --prefix client",
+    "dev:server": "npm run dev --prefix server",
     "build": "npm run build --prefix server && npm run build --prefix client",
-    "lint": "npm run lint --prefix client",
+    "build:client": "npm run build --prefix client",
+    "build:server": "npm run build --prefix server",
+    "test": "npm run test --prefix server && npm run test --prefix client",
+    "test:client": "npm test --prefix client",
+    "test:server": "npm test --prefix server",
+    "test:coverage": "npm run test --prefix server && npm run test --prefix client -- --coverage",
+    "lint": "npm run lint --prefix server ; npm run lint --prefix client",
+    "lint:fix": "npm run lint --prefix server -- --fix ; npm run lint --prefix client -- --fix",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,json,md,yml,yaml}\"",
     "typecheck": "npm run typecheck --prefix server && npm run typecheck --prefix client",
-    "test": "npm run test --prefix server",
-    "setup": "cd server && npm install && npx prisma generate && npx prisma db push && npx tsx prisma/seed.ts && cd ../client && npm install"
+    "db:generate": "npm run prisma:generate --prefix server",
+    "db:push": "npm run prisma:push --prefix server",
+    "db:migrate": "npm run prisma:migrate --prefix server",
+    "db:seed": "npm run prisma:seed --prefix server",
+    "db:studio": "npx prisma studio --prefix server",
+    "db:reset": "npm run prisma:reset --prefix server",
+    "db:backup": "bash scripts/backup-db.sh",
+    "db:backup:win": "powershell -File scripts/backup-db.ps1",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:build": "docker-compose build",
+    "setup": "npm install && npm run install --prefix server && npx prisma generate --prefix server && npx prisma db push --prefix server && npx tsx prisma/seed.ts --prefix server && npm install --prefix client",
+    "prepare": "husky",
+    "test:smoke": "k6 run tests/load/smoke-test.js",
+    "test:load": "k6 run tests/load/average-load.js",
+    "test:stress": "k6 run tests/load/stress-test.js",
+    "test:spike": "k6 run tests/load/spike-test.js",
+    "test:e2e": "npm test:e2e --prefix client"
   },
   "devDependencies": {
-    "concurrently": "^9.1.0"
+    "concurrently": "^9.1.0",
+    "husky": "^9.1.0",
+    "lint-staged": "^15.2.0",
+    "@commitlint/config-conventional": "^19.0.0",
+    "@commitlint/cli": "^19.0.0"
+  },
+  "lint-staged": {
+    "client/**/*.{ts,tsx}": [
+      "eslint --fix --max-warnings=0",
+      "prettier --write"
+    ],
+    "server/**/*.ts": [
+      "eslint --fix --max-warnings=0",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
   }
 }

@@ -5,6 +5,28 @@ All notable changes to RestaurantOS will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Swagger/OpenAPI documentation at `/api/docs`
+- Sentry error monitoring (frontend + backend)
+- Backend test suite with Jest + Supertest
+- Frontend test suite with Vitest + RTL
+- Performance & load testing scripts (k6)
+- Database migration strategy with Prisma Migrate
+- Husky + lint-staged pre-commit hooks
+- Production Docker hardening (multi-stage, non-root user)
+- Deployment guides for Railway and Vercel
+
+### Changed
+
+- Upgraded ESLint configuration with stricter rules
+- Enhanced CI workflow with caching, parallel jobs, and PostgreSQL service
+- Improved Dependabot configuration with grouped updates and labels
+- Updated root package.json with unified scripts
+- Hardened security policies in SECURITY.md
+
 ## [1.0.0] - 2026-05-12
 
 ### Added
@@ -36,7 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CORS with explicit origin whitelist
 - Compression (gzip) middleware
 
-### Technical
+### Infrastructure
 
 - React 18 + TypeScript + Tailwind CSS + Vite (PWA)
 - Node.js + Express + TypeScript + Prisma ORM
@@ -47,3 +69,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Offline support via service worker + IndexedDB queue
 - Stripe payment integration with webhook verification
 - Thermal printer support (WebUSB + server-side)
+
+[Unreleased]: https://github.com/HProjectRs/RestaurantOS/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/HProjectRs/RestaurantOS/releases/tag/v1.0.0

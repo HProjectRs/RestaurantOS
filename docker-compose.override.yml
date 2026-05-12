@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  postgres:
+    ports:
+      - '5432:5432'
+
+  server:
+    build:
+      dockerfile: Dockerfile.dev
+    ports:
+      - '3001:3001'
+    volumes:
+      - ./server/src:/app/src
+    environment:
+      NODE_ENV: development
+
+  client:
+    ports:
+      - '5173:80'
+    environment:
+      NODE_ENV: development

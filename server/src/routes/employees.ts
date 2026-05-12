@@ -6,7 +6,11 @@ import { AuthRequest } from '../types'
 
 const router = Router()
 
-// Get all employees (with payroll info if admin)
+/**
+ * GET /api/employees
+ * Get all employees for the current business with shift and salary info.
+ * @returns {Array<{id, name, email, phone, role, isActive, shiftId, shift, salary, salaryPeriod, createdAt}>}
+ */
 router.get('/', authenticate, requireRole('ADMIN', 'MANAGER'), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -33,7 +37,13 @@ router.get('/', authenticate, requireRole('ADMIN', 'MANAGER'), async (req: AuthR
   }
 })
 
-// Create employee
+/**
+ * POST /api/employees
+ * Create a new employee user.
+ * @body {name, email, password?, phone, role?, pin?, shiftId?, salary?, salaryPeriod?}
+ * @returns 201 {id, name, email, phone, role, isActive}
+ * @throws 400 if email already in use
+ */
 router.post('/', authenticate, requireRole('ADMIN', 'MANAGER'), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -66,7 +76,12 @@ router.post('/', authenticate, requireRole('ADMIN', 'MANAGER'), async (req: Auth
   }
 })
 
-// Update employee
+/**
+ * PUT /api/employees/:id
+ * Update an employee's details.
+ * @body {name?, phone?, role?, pin?, shiftId?, isActive?}
+ * @returns {id, name, email, phone, role, isActive}
+ */
 router.put('/:id', authenticate, requireRole('ADMIN', 'MANAGER'), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -90,7 +105,11 @@ router.put('/:id', authenticate, requireRole('ADMIN', 'MANAGER'), async (req: Au
   }
 })
 
-// Delete employee (soft)
+/**
+ * DELETE /api/employees/:id
+ * Soft-delete an employee (sets isActive to false).
+ * @returns {message: string}
+ */
 router.delete('/:id', authenticate, requireRole('ADMIN'), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -104,7 +123,11 @@ router.delete('/:id', authenticate, requireRole('ADMIN'), async (req: AuthReques
   }
 })
 
-// Shifts CRUD
+/**
+ * GET /api/employees/shifts
+ * Get all shifts for the current business with user count.
+ * @returns {Array<Shift & {_count: {users: number}}>}
+ */
 router.get('/shifts', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -118,6 +141,12 @@ router.get('/shifts', authenticate, async (req: AuthRequest, res: Response) => {
   }
 })
 
+/**
+ * POST /api/employees/shifts
+ * Create a new shift.
+ * @body {name, startTime, endTime, days}
+ * @returns 201 {Shift}
+ */
 router.post('/shifts', authenticate, requireRole('ADMIN', 'MANAGER'), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -130,6 +159,12 @@ router.post('/shifts', authenticate, requireRole('ADMIN', 'MANAGER'), async (req
   }
 })
 
+/**
+ * PUT /api/employees/shifts/:id
+ * Update a shift.
+ * @body {name?, startTime?, endTime?, days?}
+ * @returns {Shift}
+ */
 router.put('/shifts/:id', authenticate, requireRole('ADMIN', 'MANAGER'), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -143,6 +178,11 @@ router.put('/shifts/:id', authenticate, requireRole('ADMIN', 'MANAGER'), async (
   }
 })
 
+/**
+ * DELETE /api/employees/shifts/:id
+ * Delete a shift by ID.
+ * @returns {message: string}
+ */
 router.delete('/shifts/:id', authenticate, requireRole('ADMIN'), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -153,7 +193,12 @@ router.delete('/shifts/:id', authenticate, requireRole('ADMIN'), async (req: Aut
   }
 })
 
-// Payroll: Update salary info
+/**
+ * PUT /api/employees/:id/salary
+ * Update an employee's salary information.
+ * @body {salary: number, salaryPeriod: 'MONTHLY'|'WEEKLY'|'DAILY'}
+ * @returns {id, name, salary, salaryPeriod}
+ */
 router.put('/:id/salary', authenticate, requireRole('ADMIN'), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -169,7 +214,11 @@ router.put('/:id/salary', authenticate, requireRole('ADMIN'), async (req: AuthRe
   }
 })
 
-// Payroll: Get payroll report for date range
+/**
+ * GET /api/employees/payroll
+ * Get payroll report with salary info and this month's order stats.
+ * @returns {Array<{id, name, role, salary, salaryPeriod, thisMonthOrders, thisMonthSales}>}
+ */
 router.get('/payroll', authenticate, requireRole('ADMIN'), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -208,7 +257,11 @@ router.get('/payroll', authenticate, requireRole('ADMIN'), async (req: AuthReque
   }
 })
 
-// Time tracking: Clock in
+/**
+ * POST /api/employees/clock-in
+ * Record a clock-in for the authenticated employee.
+ * @returns {Attendance} created attendance record
+ */
 router.post('/clock-in', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -226,7 +279,12 @@ router.post('/clock-in', authenticate, async (req: AuthRequest, res: Response) =
   }
 })
 
-// Time tracking: Clock out
+/**
+ * POST /api/employees/clock-out
+ * Record a clock-out for the authenticated employee.
+ * @returns {Attendance} updated attendance record with clockOut time
+ * @throws 404 if no active clock-in found
+ */
 router.post('/clock-out', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
@@ -246,7 +304,12 @@ router.post('/clock-out', authenticate, async (req: AuthRequest, res: Response) 
   }
 })
 
-// Time tracking: Get attendance records
+/**
+ * GET /api/employees/attendance
+ * Get attendance records with optional filters.
+ * @query {from?: string, to?: string, userId?: string}
+ * @returns {Array<Attendance & {user: {id, name, role}}>}
+ */
 router.get('/attendance', authenticate, requireRole('ADMIN', 'MANAGER'), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma')
