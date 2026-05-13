@@ -4,9 +4,12 @@ import bcrypt from 'bcryptjs'
 const prisma = new PrismaClient()
 
 async function main() {
-  // Create demo business
-  const business = await prisma.business.create({
-    data: {
+  // Create or get demo business
+  const business = await prisma.business.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000001' },
+    update: {},
+    create: {
+      id: '00000000-0000-0000-0000-000000000001',
       name: 'مقهى الأصيل',
       nameAr: 'مقهى الأصيل',
       taxRate: 15,
@@ -16,10 +19,12 @@ async function main() {
     },
   })
 
-  // Create admin user
+  // Create or get admin user
   const hashedPassword = await bcrypt.hash('admin123', 12)
-  await prisma.user.create({
-    data: {
+  await prisma.user.upsert({
+    where: { email: 'admin@cafe.com' },
+    update: { password: hashedPassword },
+    create: {
       name: 'مدير النظام',
       email: 'admin@cafe.com',
       password: hashedPassword,

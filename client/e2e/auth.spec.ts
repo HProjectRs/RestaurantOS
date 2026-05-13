@@ -13,9 +13,8 @@ test.describe('Authentication Flow', () => {
     await page.locator('input[type="email"]').fill('admin@cafe.com')
     await page.locator('input[type="password"]').fill('wrongpassword')
     await page.locator('button[type="submit"]').click()
-    await page.waitForTimeout(3000)
-    const url = page.url()
-    expect(url).not.toContain('/admin')
+    await expect(page.locator('text=Invalid,email,or,password').or(page.locator('text=Invalid credentials')).or(page.locator('[class*="error"]')).or(page.locator('[role="alert"]'))).toBeVisible({ timeout: 5000 })
+    await expect(page).not.toHaveURL(/\/admin/)
   })
 
   test('should redirect to login when accessing protected route without auth', async ({ page }) => {
@@ -23,22 +22,20 @@ test.describe('Authentication Flow', () => {
     await expect(page).toHaveURL(/\/login/)
   })
 
-  test('should load kitchen display page', async ({ page }) => {
+  test('should redirect to login when accessing kitchen display without auth', async ({ page }) => {
     await page.goto('/kitchen')
-    const content = await page.content()
-    expect(content.length > 100).toBeTruthy()
+    await expect(page).toHaveURL(/\/login/, { timeout: 5000 })
   })
 
   test('should load menu page', async ({ page }) => {
     await page.goto('/menu')
-    const content = await page.content()
-    expect(content.length > 100).toBeTruthy()
+    await expect(page.locator('body')).toBeVisible()
   })
 
   test('should handle offline mode', async ({ page }) => {
     await page.goto('/')
     await page.context().setOffline(true)
-    await page.waitForTimeout(1000)
+    await page.waitForTimeout(500)
     await page.context().setOffline(false)
   })
 })
